@@ -1,0 +1,47 @@
+import time
+import board
+import busio
+from adafruit_bme280 import basic as adafruit_bme280
+from adafruit_ssd1306 import SSD1306_I2C
+from PIL import Image, ImageDraw, ImageFont
+
+# Configuración del bus I2C
+# Asegúrate de que los pines I2C (SCL y SDA) están correctamente conectados
+i2c = busio.I2C(board.SCL, board.SDA)  # Pines correctos de la Orange Pi Zero 3
+
+# Configuración del sensor BME280
+bme280 = adafruit_bme280.Adafruit_BME280_I2C(i2c, address=0x76)  # Dirección I2C del BME280
+
+# Configuración de la pantalla OLED SSD1306
+oled_width = 128  # Ancho de la pantalla OLED
+oled_height = 64  # Alto de la pantalla OLED
+oled = SSD1306_I2C(oled_width, oled_height, i2c, addr=0x3C)  # Dirección I2C del OLED SSD1306
+
+# Limpiar la pantalla OLED
+oled.fill(0)
+oled.show()
+
+# Configuración de fuentes
+font = ImageFont.load_default()
+
+while True:
+    # Crear una imagen para dibujar
+    image = Image.new("1", (oled_width, oled_height))
+    draw = ImageDraw.Draw(image)
+
+    # Leer datos del sensor BME280
+    temperatura = bme280.temperature
+    humedad = bme280.humidity
+    presion = bme280.pressure
+
+    # Mostrar los datos en la pantalla OLED
+    draw.text((0, 0), f'Temp: {temperatura:.1f} C', font=font, fill=255)
+    draw.text((0, 16), f'Hum: {humedad:.1f} %', font=font, fill=255)
+    draw.text((0, 32), f'Pres: {presion:.1f} hPa', font=font, fill=255)
+
+    # Actualizar la pantalla OLED
+    oled.image(image)
+    oled.show()
+
+    # Esperar 2 segundos antes de la siguiente lectura
+    time.sleep(2)
